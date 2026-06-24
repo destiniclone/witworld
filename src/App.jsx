@@ -462,8 +462,75 @@ export default function WITWorld() {
   const [won, setWon] = useState(false);
   const [lost, setLost] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [alreadyPlayed, setAlreadyPlayed] = useState(false);
   const { country, loc } = puzzle;
   const { images, loading: imgLoading } = useWikiImages(loc[0]);
+
+  // Load stats from localStorage
+  const [stats, setStats] = useState(() => {
+    try {
+      const stored = localStorage.getItem("witworld_stats");
+      return stored ? JSON.parse(stored) : { games: 0, wins: 0, guesses: [0, 0, 0, 0, 0, 0] };
+    } catch {
+      return { games: 0, wins: 0, guesses: [0, 0, 0, 0, 0, 0] };
+    }
+  });
+
+  // Check if already played today's puzzle
+  useEffect(() => {
+    try {
+      const now = new Date();
+      const today = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+      const played = localStorage.getItem("witworld_played_dates");
+      const playedDates = played ? JSON.parse(played) : {};
+      
+      if (playedDates[today]) {
+        setAlreadyPlayed(true);
+        const result = playedDates[today];
+        if (result.won) {
+          setWon(true);
+          setSubmitted(result.submitted);
+        } else {
+          setLost(true);
+          setSubmitted(result.submitted);
+        }
+      }
+    } catch (e) {
+      console.error("Error checking played dates:", e);
+    }
+  }, []);
+
+  // Save stats when game ends
+  useEffect(() => {
+    if (won || lost) {
+      const guessCount = submitted.findIndex(s => !s);
+      const finalCount = guessCount === -1 ? 6 : guessCount;
+      
+      const newStats = { ...stats, games: stats.games + 1 };
+      if (won) {
+        newStats.wins = stats.wins + 1;
+        newStats.guesses[finalCount] = (newStats.guesses[finalCount] || 0) + 1;
+      } else {
+        newStats.guesses[5] = (newStats.guesses[5] || 0) + 1;
+      }
+      
+      setStats(newStats);
+      localStorage.setItem("witworld_stats", JSON.stringify(newStats));
+      
+      // Mark puzzle as played today
+      try {
+        const now = new Date();
+        const today = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+        const played = localStorage.getItem("witworld_played_dates");
+        const playedDates = played ? JSON.parse(played) : {};
+        playedDates[today] = { won, submitted };
+        localStorage.setItem("witworld_played_dates", JSON.stringify(playedDates));
+      } catch (e) {
+        console.error("Error saving played date:", e);
+      }
+    }
+  }, [won, lost]);
 
   function handleGuess(idx) {
     const guess = guesses[idx];
@@ -516,14 +583,85 @@ export default function WITWorld() {
     }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
-      <div style={{ textAlign: "center", marginBottom: 28 }}>
-        <h1 style={{ margin: 0, fontSize: 36, fontWeight: 900, letterSpacing: -1, color: "#f8f8f2", marginBottom: 4 }}>
-          Where In The World?
-        </h1>
-        <p style={{ margin: 0, color: "#666", fontSize: 13 }}>
-          Guess the country
-        </p>
+      <div style={{ textAlign: "center", marginBottom: 28, width: "100%", maxWidth: 520, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ flex: 1 }} />
+        <div style={{ textAlign: "center", flex: 2 }}>
+          <h1 style={{ margin: 0, fontSize: 36, fontWeight: 900, letterSpacing: -1, color: "#f8f8f2", marginBottom: 4 }}>
+            Where In The World?
+          </h1>
+          <p style={{ margin: 0, color: "#666", fontSize: 13 }}>
+            Guess the country
+          </p>
+        </div>
+        <button
+          onClick={() => setShowStats(!showStats)}
+          style={{
+            flex: 1, textAlign: "right", padding: "8px 12px", borderRadius: 8,
+            background: "transparent", border: "1px solid #333", color: "#888",
+            cursor: "pointer", fontSize: 18, fontWeight: 700
+          }}
+        >
+          📊
+        </button>
       </div>
+
+      {showStats && (
+        <div style={{
+          background: "linear-gradient(135deg, #1e1e2e, #16162a)",
+          border: "1px solid #6366f1", borderRadius: 16,
+          overflow: "hidden", marginBottom: 28, width: "100%", maxWidth: 520,
+          padding: "20px 24px"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#f8f8f2" }}>Your Stats</h2>
+            <button
+              onClick={() => setShowStats(false)}
+              style={{
+                background: "transparent", border: "none", color: "#888", cursor: "pointer", fontSize: 16
+              }}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+            <div style={{ background: "#111118", padding: 12, borderRadius: 8 }}>
+              <div style={{ fontSize: 24, fontWeight: 900, color: "#6366f1" }}>{stats.games}</div>
+              <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>GAMES PLAYED</div>
+            </div>
+            <div style={{ background: "#111118", padding: 12, borderRadius: 8 }}>
+              <div style={{ fontSize: 24, fontWeight: 900, color: "#4ade80" }}>
+                {stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0}%
+              </div>
+              <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>WIN RATE</div>
+            </div>
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#aaa", marginBottom: 8 }}>GUESS DISTRIBUTION</div>
+            {[1, 2, 3, 4, 5, 6].map(i => {
+              const count = stats.guesses[i - 1] || 0;
+              const maxCount = Math.max(...stats.guesses, 1);
+              const percent = maxCount > 0 ? (count / maxCount) * 100 : 0;
+              return (
+                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#aaa", width: 20 }}>{i}</span>
+                  <div style={{
+                    flex: 1, height: 20, background: "#1a1a1a", borderRadius: 4, overflow: "hidden"
+                  }}>
+                    <div style={{
+                      width: `${percent}%`, height: "100%",
+                      background: i === 1 ? "#4ade80" : i <= 3 ? "#60a5fa" : "#fb923c",
+                      transition: "width 0.3s"
+                    }} />
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#aaa", width: 20, textAlign: "right" }}>{count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div style={{
         background: "linear-gradient(135deg, #1e1e2e, #16162a)",
@@ -571,11 +709,11 @@ export default function WITWorld() {
               <SearchDropdown
                 value={guesses[i]}
                 onChange={v => { const g = [...guesses]; g[i] = v; setGuesses(g); }}
-                disabled={!isActive}
+                disabled={!isActive || alreadyPlayed}
                 placeholder={isActive ? "Select…" : submitted[i] ? guesses[i] || "—" : "—"}
               />
 
-              {isActive && (
+              {isActive && !alreadyPlayed && (
                 <button
                   onClick={() => handleGuess(i)}
                   disabled={!guesses[i]}
