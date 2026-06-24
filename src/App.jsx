@@ -682,6 +682,7 @@ export default function WITWorld() {
           const isCorrect = submitted[i] && guesses[i] === country.name;
           const isWrong = submitted[i] && guesses[i] !== country.name;
 
+          return (
             <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", opacity: i > currentRow && !won && !lost ? 0.35 : 1 }}>
               <div style={{
                 width: 24, height: 24, borderRadius: "50%", flexShrink: 0,
