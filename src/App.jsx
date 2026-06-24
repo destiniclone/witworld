@@ -409,7 +409,7 @@ function SearchDropdown({ value, onChange, disabled, placeholder }) {
             placeholder="Search country…"
             style={{
               padding: "8px 12px", background: "#2a2a3e", border: "none", borderBottom: "1px solid #444",
-              color: "#f8f8f2", fontSize: 13, outline: "none"
+              color: "#f8f8f2", fontSize: "16px", outline: "none"
             }}
           />
           <div style={{ overflowY: "auto", flex: 1 }}>
