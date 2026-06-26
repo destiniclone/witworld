@@ -236,12 +236,17 @@ function getPuzzleForDate(dateStr) {
 
 function getDailyPuzzle() {
   const now = new Date();
-  const utcDateStr = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
-  const countryIdx = getPuzzleForDate(utcDateStr);
+  // Convert to PST (UTC-8)
+  const pstTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+  const pstDateStr = `${pstTime.getFullYear()}-${String(pstTime.getMonth() + 1).padStart(2, '0')}-${String(pstTime.getDate()).padStart(2, '0')}`;
+  
+  let countryIdx = getPuzzleForDate(pstDateStr);
+  // Add offset to change the puzzle for today
+  countryIdx = (countryIdx + 42) % COUNTRIES.length;
   const country = COUNTRIES[countryIdx];
-  const locIdx = getPuzzleForDate(utcDateStr + "loc") % country.locs.length;
+  const locIdx = getPuzzleForDate(pstDateStr + "loc") % country.locs.length;
   const loc = country.locs[locIdx];
-  return { country, loc, dateStr: utcDateStr };
+  return { country, loc, dateStr: pstDateStr };
 }
 
 function getRandomPuzzle() {
@@ -467,22 +472,24 @@ export default function WITWorld() {
   const [puzzle, setPuzzle] = useState(() => {
     try {
       const now = new Date();
-      const today = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
-      const stored = localStorage.getItem("witworld_puzzle_date");
+      // Convert to PST (UTC-8)
+      const pstTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+      const today = `${pstTime.getFullYear()}-${String(pstTime.getMonth() + 1).padStart(2, '0')}-${String(pstTime.getDate()).padStart(2, '0')}`;
+      const stored = localStorage.getItem("witworld_puzzle_date_v2");
       
       // If stored date doesn't match today, it's a new day - clear old data
       if (stored !== today) {
-        localStorage.removeItem("witworld_puzzle");
+        localStorage.removeItem("witworld_puzzle_v2");
         localStorage.removeItem("witworld_played_dates");
       }
       
-      const p = localStorage.getItem("witworld_puzzle");
+      const p = localStorage.getItem("witworld_puzzle_v2");
       if (p) return JSON.parse(p);
       
       // Generate new puzzle for today
       const newPuzzle = getDailyPuzzle();
-      localStorage.setItem("witworld_puzzle_date", today);
-      localStorage.setItem("witworld_puzzle", JSON.stringify(newPuzzle));
+      localStorage.setItem("witworld_puzzle_date_v2", today);
+      localStorage.setItem("witworld_puzzle_v2", JSON.stringify(newPuzzle));
       return newPuzzle;
     } catch {
       return getDailyPuzzle();
