@@ -269,6 +269,7 @@ function useWikiImages(locationName) {
 
     async function fetchImages() {
       try {
+        // Search for the location
         const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(locationName)}&srlimit=1&format=json&origin=*`;
         const searchRes = await fetch(searchUrl);
         const searchData = await searchRes.json();
@@ -276,8 +277,9 @@ function useWikiImages(locationName) {
         if (!results?.length) { if (!cancelled) setLoading(false); return; }
 
         const title = results[0].title;
-        // Get page content to find infobox image
-        const pageUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&pithumbsize=500&format=json&origin=*`;
+        
+        // Get the page image (infobox/thumbnail)
+        const pageUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&pithumbsize=400&format=json&origin=*`;
         const pageRes = await fetch(pageUrl);
         const pageData = await pageRes.json();
         const pages = pageData?.query?.pages;
@@ -286,37 +288,13 @@ function useWikiImages(locationName) {
         
         if (mainImage && !cancelled) {
           setImages([mainImage]);
-        } else {
-          // Fallback: get first non-map image from page
-          const imagesUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=images&format=json&origin=*`;
-          const imagesRes = await fetch(imagesUrl);
-          const imagesData = await imagesRes.json();
-          const pagesImages = imagesData?.query?.pages;
-          const pageImages = pagesImages ? Object.values(pagesImages)[0] : null;
-          const images_list = pageImages?.images || [];
-
-          const mapKeywords = /map|locate|position|geography|diagram|chart|flag|coat of arms|infobox|location map|administrative/i;
-          
-          for (const img of images_list.slice(0, 10)) {
-            const imgTitle = img.title;
-            if (!/\.svg$/i.test(imgTitle) && !mapKeywords.test(imgTitle)) {
-              const imgInfoUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(imgTitle)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
-              const imgInfoRes = await fetch(imgInfoUrl);
-              const imgInfoData = await imgInfoRes.json();
-              const imgPages = imgInfoData?.query?.pages;
-              const imgPage = imgPages ? Object.values(imgPages)[0] : null;
-              const url = imgPage?.imageinfo?.[0]?.url;
-              if (url && !cancelled) {
-                setImages([url]);
-                setLoading(false);
-                return;
-              }
-            }
-          }
-          if (!cancelled) setLoading(false);
+          setLoading(false);
+        } else if (!cancelled) {
+          setLoading(false);
         }
       } catch (e) {
-        if (!cancelled) { setLoading(false); }
+        console.error("Error fetching images:", e);
+        if (!cancelled) setLoading(false);
       }
     }
 
@@ -829,22 +807,23 @@ export default function WITWorld() {
                 <div style={{
                   display: "flex", alignItems: "center", gap: 5, flexShrink: 0,
                   background: "#1e1e2e", border: "1px solid #333", borderRadius: 8,
-                  padding: "6px 10px", fontSize: 12, minWidth: 0
+                  padding: "6px 10px", fontSize: 14, minWidth: 0
                 }}>
-                  <span style={{ whiteSpace: "nowrap", color: "#fff" }}>
+                  <span style={{ whiteSpace: "nowrap", color: "#fff", fontSize: 14 }}>
                     {hint.dir === "N" ? "⬆️" : hint.dir === "S" ? "⬇️" : hint.dir === "E" ? "➡️" : hint.dir === "W" ? "⬅️" :
                      hint.dir === "NE" ? "↗️" : hint.dir === "NW" ? "↖️" : hint.dir === "SE" ? "↘️" : "↙️"}
                   </span>
                   <span style={{ 
                     fontWeight: 700, 
                     whiteSpace: "nowrap",
+                    fontSize: 14,
                     color: hint.percentage < 70 
                       ? `hsl(${hint.percentage * 1.2}, 100%, 50%)` 
                       : `hsl(${120 - (hint.percentage - 70) * 1.2}, 100%, 50%)`
                   }}>
                     {hint.percentage}%
                   </span>
-                  <span style={{ whiteSpace: "nowrap", color: "#fff" }}>
+                  <span style={{ whiteSpace: "nowrap", color: "#fff", fontSize: 14 }}>
                     {hint.dist}km {hint.proximityEmoji}
                   </span>
                 </div>
