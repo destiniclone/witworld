@@ -223,6 +223,15 @@ function getDailyPuzzle() {
   return { country, loc, dateStr: utcDateStr };
 }
 
+function getRandomPuzzle() {
+  if (COUNTRIES.length === 0) return null;
+  const countryIdx = Math.floor(Math.random() * COUNTRIES.length);
+  const country = COUNTRIES[countryIdx];
+  const locIdx = Math.floor(Math.random() * country.locs.length);
+  const loc = country.locs[locIdx];
+  return { country, loc, dateStr: null };
+}
+
 function useWikiImages(locationName) {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -813,6 +822,26 @@ export default function WITWorld() {
               }}
             >
               {copied ? "✓ Copied!" : "📤 Share"}
+            </button>
+            <button
+              onClick={() => {
+                const newPuzzle = getRandomPuzzle();
+                if (newPuzzle) {
+                  setPuzzle(newPuzzle);
+                  setGuesses(Array(6).fill(""));
+                  setSubmitted(Array(6).fill(false));
+                  setCurrentRow(0);
+                  setWon(false);
+                  setLost(false);
+                }
+              }}
+              style={{
+                padding: "10px 18px", borderRadius: 8,
+                background: "#6366f1", color: "#fff", border: "none",
+                fontWeight: 700, fontSize: 13, cursor: "pointer"
+              }}
+            >
+              🎮 New Game
             </button>
           </div>
         </div>
