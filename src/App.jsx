@@ -439,7 +439,6 @@ function SearchDropdown({ value, onChange, disabled, placeholder }) {
 }
 
 export default function WITWorld() {
-  const [loading, setLoading] = useState(true);
   const [puzzle, setPuzzle] = useState(null);
   const [guesses, setGuesses] = useState(Array(6).fill(""));
   const [submitted, setSubmitted] = useState(Array(6).fill(false));
@@ -622,17 +621,11 @@ export default function WITWorld() {
     <div style={{
       minHeight: "100vh", background: "#0f0f17", color: "#f8f8f2",
       fontFamily: "'Segoe UI', system-ui, sans-serif", display: "flex",
-      flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px 48px"
+      flexDirection: "column", alignItems: "center", padding: "24px 16px 48px"
     }}>
-      {typeof window !== 'undefined' && window.console && console.log('WITWorld mounted. Loading:', loading, 'Puzzle:', !!puzzle)}
-      {loading ? (
-        <div style={{ textAlign: "center", color: "#666" }}>
-          <p>Loading game... (checking locations.json)</p>
-        </div>
-      ) : !puzzle ? (
-        <div style={{ textAlign: "center", color: "#f87171" }}>
-          <p>Error loading game. Check console for details.</p>
-          <p style={{ fontSize: 12, color: "#888", marginTop: 16 }}>Countries loaded: {COUNTRIES.length}</p>
+      {!puzzle ? (
+        <div style={{ textAlign: "center", color: "#f87171", marginTop: 50 }}>
+          <p>Error: No puzzle loaded. {COUNTRIES.length} countries available.</p>
         </div>
       ) : (
       <div style={{
