@@ -455,7 +455,6 @@ export default function WITWorld() {
   useEffect(() => {
     if (COUNTRIES.length === 0) {
       console.warn("No countries loaded");
-      setLoading(false);
       return;
     }
     
@@ -467,7 +466,6 @@ export default function WITWorld() {
       const p = localStorage.getItem("witworld_puzzle");
       if (p) {
         setPuzzle(JSON.parse(p));
-        setLoading(false);
         return;
       }
     }
@@ -476,7 +474,6 @@ export default function WITWorld() {
     localStorage.setItem("witworld_puzzle_date", today);
     localStorage.setItem("witworld_puzzle", JSON.stringify(newPuzzle));
     setPuzzle(newPuzzle);
-    setLoading(false);
   }, []);
   
   // Only destructure puzzle when it's loaded
