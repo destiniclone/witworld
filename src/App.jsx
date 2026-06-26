@@ -610,6 +610,14 @@ export default function WITWorld() {
     }
   }
 
+  function resetGame() {
+    // Clear all game state
+    localStorage.removeItem("witworld_puzzle_date");
+    localStorage.removeItem("witworld_puzzle");
+    // Reload the page to get a new daily puzzle
+    window.location.reload();
+  }
+
   function getHint(idx) {
     if (!submitted[idx] || guesses[idx] === country.name) return null;
     const gc = COUNTRIES.find(c => c.name === guesses[idx]);
@@ -841,46 +849,42 @@ export default function WITWorld() {
       </div>
 
       {(won || lost) && (
-        <div style={{
-          marginTop: 28, width: "100%", maxWidth: 520,
-          background: won ? "linear-gradient(135deg,#052e16,#14532d)" : "linear-gradient(135deg,#1c0a0a,#450a0a)",
-          border: `1px solid ${won ? "#4ade80" : "#f87171"}`,
-          borderRadius: 16, padding: "20px", textAlign: "center"
-        }}>
-          <div style={{ fontSize: 28, marginBottom: 6 }}>{won ? "🎉" : "💡"}</div>
-          <div style={{ fontWeight: 800, fontSize: 20, color: won ? "#4ade80" : "#f87171", marginBottom: 4 }}>
-            {won ? (
-              (() => {
-                const guessCount = submitted.findIndex(s => !s);
-                const finalCount = guessCount === -1 ? 6 : guessCount + 1;
-                const messages = ["Perfect!", "Excellent!", "Great!", "Nice!", "Good!", "Phew!"];
-                return messages[finalCount - 1] || "Perfect!";
-              })()
-            ) : "Better luck next time!"}
-          </div>
-          {lost && (
-            <div style={{ color: "#aaa", marginBottom: 4, fontSize: 14 }}>
-              The answer was <strong style={{ color: "#f8f8f2" }}>{country.name}</strong>
-            </div>
-          )}
-          <div style={{ color: "#aaa", fontSize: 13, marginBottom: 16 }}>
-            {loc[0]} is in <strong style={{ color: "#f8f8f2" }}>{country.name}</strong>
-          </div>
-          <button
-            onClick={() => shareResults()}
-            style={{
-              padding: "10px 18px", borderRadius: 8,
-              background: copied ? "#059669" : "#10b981", color: "#fff", border: "none",
-              fontWeight: 700, fontSize: 13, cursor: "pointer"
-            }}
-          >
-            {copied ? "✓ Copied!" : "📤 Share"}
-          </button>
-        </div>
-      )}
-
-      {(won || lost) && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20, marginTop: 28, width: "100%", maxWidth: 520 }}>
+          <div style={{
+            background: won ? "linear-gradient(135deg,#052e16,#14532d)" : "linear-gradient(135deg,#1c0a0a,#450a0a)",
+            border: `1px solid ${won ? "#4ade80" : "#f87171"}`,
+            borderRadius: 16, padding: "20px", textAlign: "center"
+          }}>
+            <div style={{ fontSize: 28, marginBottom: 6 }}>{won ? "🎉" : "💡"}</div>
+            <div style={{ fontWeight: 800, fontSize: 20, color: won ? "#4ade80" : "#f87171", marginBottom: 4 }}>
+              {won ? (
+                (() => {
+                  const guessCount = submitted.findIndex(s => !s);
+                  const finalCount = guessCount === -1 ? 6 : guessCount + 1;
+                  const messages = ["Perfect!", "Excellent!", "Great!", "Nice!", "Good!", "Phew!"];
+                  return messages[finalCount - 1] || "Perfect!";
+                })()
+              ) : "Better luck next time!"}
+            </div>
+            {lost && (
+              <div style={{ color: "#aaa", marginBottom: 4, fontSize: 14 }}>
+                The answer was <strong style={{ color: "#f8f8f2" }}>{country.name}</strong>
+              </div>
+            )}
+            <div style={{ color: "#aaa", fontSize: 13, marginBottom: 16 }}>
+              {loc[0]} is in <strong style={{ color: "#f8f8f2" }}>{country.name}</strong>
+            </div>
+            <button
+              onClick={() => shareResults()}
+              style={{
+                padding: "10px 18px", borderRadius: 8,
+                background: copied ? "#059669" : "#10b981", color: "#fff", border: "none",
+                fontWeight: 700, fontSize: 13, cursor: "pointer"
+              }}
+            >
+              {copied ? "✓ Copied!" : "📤 Share"}
+            </button>
+          </div>
           {/* Wikipedia Card */}
           <div style={{
             background: "linear-gradient(135deg, #1e1e2e, #16162a)",
@@ -964,6 +968,30 @@ export default function WITWorld() {
       }}>
         EVERY DAY A NEW GAME
       </div>
+
+      <button
+        onClick={() => {
+          if (confirm("Reset today's game? This will clear your progress.")) {
+            resetGame();
+          }
+        }}
+        style={{
+          marginTop: 20, padding: "8px 16px", borderRadius: 8,
+          background: "#333", color: "#888", border: "1px solid #444",
+          fontWeight: 700, fontSize: 12, cursor: "pointer",
+          transition: "all 0.2s"
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = "#444";
+          e.target.style.color = "#aaa";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = "#333";
+          e.target.style.color = "#888";
+        }}
+      >
+        🔄 Reset Game
+      </button>
     </div>
   );
 }
