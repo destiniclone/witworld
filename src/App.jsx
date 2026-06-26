@@ -357,13 +357,6 @@ export default function WITWorld() {
     }
     initializeGame();
   }, []);
-  const [won, setWon] = useState(false);
-  const [lost, setLost] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const [alreadyPlayed, setAlreadyPlayed] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const statsSavedRef = useRef(false);
   
   // Only destructure puzzle when it's loaded
   const country = puzzle?.country;
