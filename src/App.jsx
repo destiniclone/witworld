@@ -2,8 +2,217 @@ import { useState, useMemo, useRef, useEffect } from "react";
 
 // ─── COUNTRIES DATA ──────────────────────────────────────────────────────────────
 // 4 types only: capital, former, city, unicode
-// Border data: which countries share land borders with which
-const BORDERS = {
+// Continent mapping by country
+const CONTINENTS = {
+  // North America
+  "United States": "North America",
+  "Canada": "North America",
+  "Mexico": "North America",
+  "Guatemala": "North America",
+  "Belize": "North America",
+  "Honduras": "North America",
+  "El Salvador": "North America",
+  "Nicaragua": "North America",
+  "Costa Rica": "North America",
+  "Panama": "North America",
+  "Bahamas": "North America",
+  "Cuba": "North America",
+  "Jamaica": "North America",
+  "Dominican Republic": "North America",
+  "Haiti": "North America",
+  "Trinidad and Tobago": "North America",
+  "Antigua and Barbuda": "North America",
+  "Saint Kitts and Nevis": "North America",
+  "Dominica": "North America",
+  "Grenada": "North America",
+  "Puerto Rico": "North America",
+  "Barbados": "North America",
+  
+  // South America
+  "Colombia": "South America",
+  "Venezuela": "South America",
+  "Guyana": "South America",
+  "Suriname": "South America",
+  "French Guiana": "South America",
+  "Ecuador": "South America",
+  "Peru": "South America",
+  "Brazil": "South America",
+  "Bolivia": "South America",
+  "Paraguay": "South America",
+  "Chile": "South America",
+  "Argentina": "South America",
+  "Uruguay": "South America",
+  
+  // Europe
+  "Iceland": "Europe",
+  "Ireland": "Europe",
+  "United Kingdom": "Europe",
+  "Portugal": "Europe",
+  "Spain": "Europe",
+  "France": "Europe",
+  "Belgium": "Europe",
+  "Netherlands": "Europe",
+  "Luxembourg": "Europe",
+  "Germany": "Europe",
+  "Denmark": "Europe",
+  "Sweden": "Europe",
+  "Norway": "Europe",
+  "Finland": "Europe",
+  "Estonia": "Europe",
+  "Latvia": "Europe",
+  "Lithuania": "Europe",
+  "Poland": "Europe",
+  "Czech Republic": "Europe",
+  "Slovakia": "Europe",
+  "Austria": "Europe",
+  "Switzerland": "Europe",
+  "Liechtenstein": "Europe",
+  "Italy": "Europe",
+  "Slovenia": "Europe",
+  "Croatia": "Europe",
+  "Bosnia and Herzegovina": "Europe",
+  "Serbia": "Europe",
+  "Montenegro": "Europe",
+  "Kosovo": "Europe",
+  "Albania": "Europe",
+  "North Macedonia": "Europe",
+  "Greece": "Europe",
+  "Romania": "Europe",
+  "Bulgaria": "Europe",
+  "Hungary": "Europe",
+  "Moldova": "Europe",
+  "Ukraine": "Europe",
+  "Belarus": "Europe",
+  "Russia": "Europe",
+  "Andorra": "Europe",
+  "Monaco": "Europe",
+  "San Marino": "Europe",
+  "Vatican City": "Europe",
+  "Malta": "Europe",
+  "Cyprus": "Europe",
+  
+  // Africa
+  "Morocco": "Africa",
+  "Algeria": "Africa",
+  "Tunisia": "Africa",
+  "Libya": "Africa",
+  "Egypt": "Africa",
+  "Sudan": "Africa",
+  "South Sudan": "Africa",
+  "Eritrea": "Africa",
+  "Ethiopia": "Africa",
+  "Djibouti": "Africa",
+  "Somalia": "Africa",
+  "Kenya": "Africa",
+  "Uganda": "Africa",
+  "Tanzania": "Africa",
+  "Rwanda": "Africa",
+  "Burundi": "Africa",
+  "Democratic Republic of the Congo": "Africa",
+  "Republic of the Congo": "Africa",
+  "Central African Republic": "Africa",
+  "Chad": "Africa",
+  "Cameroon": "Africa",
+  "Equatorial Guinea": "Africa",
+  "Gabon": "Africa",
+  "São Tomé and Príncipe": "Africa",
+  "Angola": "Africa",
+  "Zambia": "Africa",
+  "Zimbabwe": "Africa",
+  "Malawi": "Africa",
+  "Mozambique": "Africa",
+  "Botswana": "Africa",
+  "Namibia": "Africa",
+  "South Africa": "Africa",
+  "Lesotho": "Africa",
+  "Eswatini": "Africa",
+  "Mali": "Africa",
+  "Mauritania": "Africa",
+  "Senegal": "Africa",
+  "Gambia": "Africa",
+  "Guinea-Bissau": "Africa",
+  "Guinea": "Africa",
+  "Sierra Leone": "Africa",
+  "Liberia": "Africa",
+  "Ivory Coast": "Africa",
+  "Ghana": "Africa",
+  "Togo": "Africa",
+  "Benin": "Africa",
+  "Niger": "Africa",
+  "Burkina Faso": "Africa",
+  "Western Sahara": "Africa",
+  "Cabo Verde": "Africa",
+  "Mauritius": "Africa",
+  "Seychelles": "Africa",
+  "Comoros": "Africa",
+  
+  // Asia
+  "Turkey": "Asia",
+  "Syria": "Asia",
+  "Lebanon": "Asia",
+  "Israel": "Asia",
+  "Palestine": "Asia",
+  "Jordan": "Asia",
+  "Iraq": "Asia",
+  "Iran": "Asia",
+  "Saudi Arabia": "Asia",
+  "Yemen": "Asia",
+  "Oman": "Asia",
+  "United Arab Emirates": "Asia",
+  "Qatar": "Asia",
+  "Bahrain": "Asia",
+  "Kuwait": "Asia",
+  "Pakistan": "Asia",
+  "Afghanistan": "Asia",
+  "Tajikistan": "Asia",
+  "Uzbekistan": "Asia",
+  "Turkmenistan": "Asia",
+  "Kazakhstan": "Asia",
+  "Kyrgyzstan": "Asia",
+  "India": "Asia",
+  "Nepal": "Asia",
+  "Bhutan": "Asia",
+  "Bangladesh": "Asia",
+  "Sri Lanka": "Asia",
+  "Maldives": "Asia",
+  "Myanmar": "Asia",
+  "Thailand": "Asia",
+  "Laos": "Asia",
+  "Cambodia": "Asia",
+  "Vietnam": "Asia",
+  "Malaysia": "Asia",
+  "Singapore": "Asia",
+  "Brunei": "Asia",
+  "Indonesia": "Asia",
+  "East Timor": "Asia",
+  "Philippines": "Asia",
+  "China": "Asia",
+  "Mongolia": "Asia",
+  "South Korea": "Asia",
+  "North Korea": "Asia",
+  "Japan": "Asia",
+  "Taiwan": "Asia",
+  "Hong Kong": "Asia",
+  "Macau": "Asia",
+  
+  // Oceania
+  "Australia": "Oceania",
+  "New Zealand": "Oceania",
+  "Fiji": "Oceania",
+  "Samoa": "Oceania",
+  "Vanuatu": "Oceania",
+  "Solomon Islands": "Oceania",
+  "Kiribati": "Oceania",
+  "Nauru": "Oceania",
+  "Palau": "Oceania",
+  "Tonga": "Oceania",
+  "Tuvalu": "Oceania",
+  "Marshall Islands": "Oceania",
+  "Micronesia": "Oceania",
+  "Papua New Guinea": "Oceania",
+};
+
+const COUNTRIES = [
   "Spain": ["France", "Portugal", "Andorra"],
   "Portugal": ["Spain"],
   "France": ["Spain", "Italy", "Switzerland", "Germany", "Luxembourg", "Belgium"],
@@ -765,23 +974,12 @@ export default function WITWorld() {
     const maxDist = 20000;
     const percentage = Math.max(0, Math.round(100 - (dist / maxDist) * 100));
     
-    // Determine proximity clue using actual border data
+    // Determine proximity clue using continent mapping and borders
     let proximityClue = "⛔️ wrong continent";
     let proximityEmoji = "⛔️";
     
-    // Simple continent mapping (lat/lon ranges)
-    function getContinent(lat, lng) {
-      if (lat > 15 && lng > -20 && lng < 55) return "Africa";
-      if (lat > 0 && lng > -20 && lng < 145) return "Europe";
-      if (lat > 10 && lng > 60 && lng < 155) return "Asia";
-      if (lat < 0 && lng > 113 && lng < 180) return "Oceania";
-      if (lat > -55 && lat < 0) return "South America";
-      if (lat > 15 && lng > -170 && lng < -50) return "North America";
-      return "Unknown";
-    }
-    
-    const targetContinent = getContinent(loc[1], loc[2]);
-    const guessContinent = getContinent(gc.cap[0], gc.cap[1]);
+    const targetContinent = CONTINENTS[country.name] || "Unknown";
+    const guessContinent = CONTINENTS[gc.name] || "Unknown";
     
     if (guessContinent === targetContinent) {
       proximityClue = "🆗 correct continent";
@@ -972,6 +1170,10 @@ export default function WITWorld() {
                   background: "#1e1e2e", border: "1px solid #333", borderRadius: 8,
                   padding: "6px 10px", fontSize: 12, minWidth: 0
                 }}>
+                  <span style={{ whiteSpace: "nowrap", color: "#fff" }}>
+                    {hint.dir === "N" ? "⬆️" : hint.dir === "S" ? "⬇️" : hint.dir === "E" ? "➡️" : hint.dir === "W" ? "⬅️" :
+                     hint.dir === "NE" ? "↗️" : hint.dir === "NW" ? "↖️" : hint.dir === "SE" ? "↘️" : "↙️"}
+                  </span>
                   <span style={{ 
                     fontWeight: 700, 
                     whiteSpace: "nowrap",
@@ -979,8 +1181,10 @@ export default function WITWorld() {
                       ? `hsl(${hint.percentage * 1.2}, 100%, 50%)` 
                       : `hsl(${120 - (hint.percentage - 70) * 1.2}, 100%, 50%)`
                   }}>
-                    {hint.percentage}% {hint.dir === "N" ? "⬆️" : hint.dir === "S" ? "⬇️" : hint.dir === "E" ? "➡️" : hint.dir === "W" ? "⬅️" :
-                     hint.dir === "NE" ? "↗️" : hint.dir === "NW" ? "↖️" : hint.dir === "SE" ? "↘️" : "↙️"} {hint.dist}km {hint.proximityEmoji}
+                    {hint.percentage}%
+                  </span>
+                  <span style={{ whiteSpace: "nowrap", color: "#fff" }}>
+                    {hint.dist}km {hint.proximityEmoji}
                   </span>
                 </div>
               )}
