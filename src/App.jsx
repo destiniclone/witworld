@@ -833,6 +833,8 @@ export default function WITWorld() {
                   setCurrentRow(0);
                   setWon(false);
                   setLost(false);
+                  setAlreadyPlayed(false);
+                  statsSavedRef.current = false;
                 }
               }}
               style={{
