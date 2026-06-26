@@ -40,7 +40,60 @@ function bearing(lat1, lon1, lat2, lon2) {
   return dirs[Math.round(b / 45) % 8];
 }
 
-function getPuzzleForDate(dateStr) {
+function useWikiImages(locationName) {
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setImages([]);
+
+    async function fetchImages() {
+      try {
+        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(locationName)}&srlimit=1&format=json&origin=*`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+        const results = searchData?.query?.search;
+        if (!results?.length) { if (!cancelled) setLoading(false); return; }
+
+        const title = results[0].title;
+        const imagesUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=images&format=json&origin=*`;
+        const imagesRes = await fetch(imagesUrl);
+        const imagesData = await imagesRes.json();
+        const pages = imagesData?.query?.pages;
+        const page = pages ? Object.values(pages)[0] : null;
+        const images_list = page?.images || [];
+
+        const imageUrls = [];
+        const mapKeywords = /map|locate|position|geography|diagram|chart|flag|coat of arms|infobox|location map|administrative/i;
+        
+        for (const img of images_list.slice(0, 15)) {
+          const imgTitle = img.title;
+          if (!/\.svg$/i.test(imgTitle) && !mapKeywords.test(imgTitle)) {
+            const imgInfoUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(imgTitle)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
+            const imgInfoRes = await fetch(imgInfoUrl);
+            const imgInfoData = await imgInfoRes.json();
+            const imgPages = imgInfoData?.query?.pages;
+            const imgPage = imgPages ? Object.values(imgPages)[0] : null;
+            const url = imgPage?.imageinfo?.[0]?.url;
+            if (url && imageUrls.length < 2) imageUrls.push(url);
+            if (imageUrls.length === 2) break;
+          }
+        }
+
+        if (!cancelled) { setImages(imageUrls); setLoading(false); }
+      } catch (e) {
+        if (!cancelled) { setLoading(false); }
+      }
+    }
+
+    fetchImages();
+    return () => { cancelled = true; };
+  }, [locationName]);
+
+  return { images, loading };
+}
   const hash = Array.from(dateStr).reduce((h, c) => ((h << 5) - h) + c.charCodeAt(0), 0);
   return Math.abs(hash) % COUNTRIES.length;
 }
@@ -69,6 +122,7 @@ export default function WITWorld() {
   const statsSavedRef = useRef(false);
 
   const { country, loc } = puzzle;
+  const { images, loading: imgLoading } = useWikiImages(loc[0]);
 
   function handleGuess(idx) {
     const guess = guesses[idx];
@@ -133,11 +187,23 @@ export default function WITWorld() {
           <p style={{ fontSize: 13, color: "#666", margin: 0 }}>guess the country</p>
         </div>
 
-        <img
-          src="https://via.placeholder.com/300?text=Location+Photo"
-          alt="Location"
-          style={{ width: "100%", height: 300, objectFit: "cover", borderRadius: 8, marginBottom: 24 }}
-        />
+        <div style={{ marginBottom: 24, minHeight: 300, background: "#1a1a25", borderRadius: 8, overflow: "hidden" }}>
+          {imgLoading ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: "#666" }}>
+              Loading image...
+            </div>
+          ) : images.length > 0 ? (
+            <img
+              src={images[0]}
+              alt="Location"
+              style={{ width: "100%", height: 300, objectFit: "cover" }}
+            />
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: "#666" }}>
+              No image available
+            </div>
+          )}
+        </div>
 
         <div style={{ marginBottom: 24 }}>
           {guesses.map((guess, idx) => (
